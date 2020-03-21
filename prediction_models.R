@@ -1,8 +1,43 @@
-require(pracma)
-require(Metrics)
-require(readr)
-path <- "/Users/davidschwelien/Desktop/Modell_Infos/ts_r.csv"
-all<- read_csv(path)
+## packages
+list.of.packages <- c("readr", "forecast", "pracma","Metrics","readr","dplyr","tibble","reshape")
+new.packages <- list.of.packages[!(list.of.packages %in% installed.packages()[,"Package"])]
+if(length(new.packages)) install.packages(new.packages)
+
+### read data
+
+library (readr)
+
+#international data
+path <- "/Users/davidschwelien/Desktop/Modell_Infos/ts_r.csv" ### issue: read from git!
+covid_world_data <- read_csv(path)
+covid_world_data  <- as.data.frame(covid_world_data )
+
+#swiss data:
+urlfile <- "https://raw.githubusercontent.com/daenuprobst/covid19-cases-switzerland/master/predicted.csv"
+covid_swiss_data <- read.csv(url(urlfile))
+covid_swiss_data[,1] <- as.Date(covid_swiss_data[,1])
+c("Switzerland_",names(covid_swiss_data))
+
+# merge and clean
+names(covid_swiss_data) <- paste("Switzerland_", names(covid_swiss_data), sep='')
+names(covid_swiss_data)[1] <- "date"
+library(dplyr)
+covid_all_data  <- left_join(covid_world_data, covid_swiss_data)
+covid_all_data[is.na(covid_all_data)] <- 0
+#swiss_compare<-covid_all_data[,grepl( "wit" , names( covid_all_data ) )]
+
+### predict data
+
+
+library(pracma)
+library(Metrics)
+library(readr)
+library(tibble)
+
+all <- covid_all_data
+### wip:
+all <- as_tibble(all) 
+###
 all$X1<-NULL
 date<-all[,1]
 date[nrow(date) + 1,1] <-all[nrow(all),1]+1
@@ -62,8 +97,27 @@ for (n in 2:ncol(all)-1) {
 pred_all<-cbind(pred_all[,4:5],pred_all[,1:3])
 names(pred_all)[5]<-"X2"
 pred_all=pred_all[with( pred_all, order(region, date)), ]
-#ds : in pred_all ist jetzt X oder Y die Prediction? oder was anders?
-#ds: es ist wohl x... t=t.rename(columns = {'X':'kalman_prediction'}) 
-View(pred_all[pred_all$region=="Switzerland_nan",])
 
-pred_all<-pred_all[,3:5]
+### clean data; export data
+covid_all_data_predicted <-  pred_all[,c(1,2,4)]
+covid_all_data_predicted[,3] <- round(covid_all_data_predicted[,3])
+library(reshape)
+covid19_cases_predicted <- cast(covid_all_data_predicted, date ~ region)
+colnames(covid19_cases_predicted) <- gsub("nan", "all", colnames(covid19_cases_predicted))
+### 
+colnum <-which(colnames(covid19_cases_predicted) =="Switzerland_all")
+colnames(covid19_cases_predicted)[colnum] <- paste("Switzerland_all")
+colnum <-which(colnames(covid19_cases_predicted) =="Switzerland_CH")
+colnames(covid19_cases_predicted)[colnum] <- paste("Switzerland_all_scraped")
+write.csv(covid19_cases_predicted,"covid19_cases_predicted.csv")
+# subset Switzerland
+x <- c("date", "wit")
+covid19_cases_predicted_switzerland <- covid19_cases_predicted[,grepl( paste(x, collapse = "|") , names(covid19_cases_predicted))]
+
+col_names <- names(covid19_cases_predicted_switzerland)
+first_cols  <- c("date", "Switzerland_all", "Switzerland_all_scraped")
+'%ni%' <- Negate('%in%')
+last_cols <- col_names[col_names%ni%first_cols]
+col_order <- c(first_cols, last_cols)
+covid19_cases_predicted_switzerland <-covid19_cases_predicted_switzerland[,col_order]
+write.csv(covid19_cases_predicted_switzerland, "covid19_cases_predicted_switzerland.csv")
