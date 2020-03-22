@@ -6,5 +6,7 @@ The data has been collected from https://github.com/daenuprobst/covid19-cases-sw
 Predict algorithms of COVID-19 based on https://github.com/Rank23/COVID19. This work here adapts https://github.com/Rank23/COVID19, with three major changes:
 
 *Thanks to the data supplied in covid19-cases-switzerland, predictions are made for actually the next days (no delay) 
-*Thanks to the data supplied in covid19-cases-switzerland, predictions are made for Swiss Kantons 
+
+*Thanks to the data supplied in covid19-cases-switzerland, predictions are made for Swiss Kantons
+
 *A prediction for three days in advance is made availuable
