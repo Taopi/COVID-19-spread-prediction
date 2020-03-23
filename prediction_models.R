@@ -36,6 +36,14 @@ scraped <- merge(time_range, scraped,by="row.names",all.x=TRUE)
 scraped <- scraped[,-(2:3)]
 colnames(scraped)[1] <- "Date"
 scraped <- scraped[,colnames]
+scraped <- scraped[-nrow(scraped),] #test
+
+# data predicted yesterday until today
+urlfile <- "https://raw.githubusercontent.com/Taopi/COVID-19-spread-prediction/master/covid19_cases_switzerland_forecast.csv"
+yesterdays_prediction <- read.csv(url(urlfile))
+yesterdays_prediction<-yesterdays_prediction[1:nrow(time_range),]
+colnames(yesterdays_prediction)[1] <- "Date"
+yesterdays_prediction <- yesterdays_prediction[,colnames]
 
 #create an empty data frame
 empty <- data.frame(matrix(ncol=length(colnames), nrow=nrow(time_range)))
@@ -43,10 +51,11 @@ colnames(empty) <- colnames
 empty[,"Date"] <-time_range
 empty[1,2:ncol(empty)]<-0
 
-#fill empty of today with: A) offical data or B) scraped data or c) yesterdays prediction
+#fill empty of today with: A) offical data or B) scraped data or c) yesterdays prediction (only for today!)
 for(k in 2 : ncol(empty) ) {
   empty[is.na(empty[,k]),k] <- offical[is.na(empty[,k]),k]
   empty[is.na(empty[,k]),k] <- scraped[is.na(empty[,k]),k]
+  empty[nrow(time_range),k] <- yesterdays_prediction[nrow(time_range),k]
 }
 
 #fill empty with offical, scraped, predicted data, impute missing using na.approx()
@@ -75,7 +84,7 @@ for(i in 1:3) {
     sig_w<-0.01
     w<-sig_w*rnorm(100) # acceleration which denotes the fluctuation (Q/R) rnorm(100, mean = 0, sd = 1)
     sig_v<-0.01
-    v<-sig_v*rnorm(100) ## changed by ds  
+    v<-sig_v*rnorm(100)
     t<-0.45
     phi<-matrix(c(1,0,t,1),2,2)
     gama<-matrix(c(0.5*t^2,t),2,1)
@@ -136,6 +145,6 @@ for(i in 1:3) {
 }
 covid19_cases_switzerland <- covid19_cases_switzerland[,colnames]
 covid19_cases_switzerland[,1] <- as.Date(covid19_cases_switzerland[,1])
-write.csv(covid19_cases_switzerland_forecast, "covid19_cases_switzerland_forecast.csv")
+write.csv(covid19_cases_switzerland, "covid19_cases_switzerland_forecast.csv")
+
 # now upload to git by hand
-View(covid19_cases_switzerland)
