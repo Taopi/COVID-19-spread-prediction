@@ -1,40 +1,72 @@
 ## packages
-list.of.packages <- c("readr", "forecast", "pracma","Metrics","readr","dplyr","tibble","reshape","zoo","googledrive")
+list.of.packages <- c("readr", "forecast", "pracma","Metrics","readr","dplyr","tibble","reshape","zoo","googledrive","tidyr","zoo")
 new.packages <- list.of.packages[!(list.of.packages %in% installed.packages()[,"Package"])]
 if(length(new.packages)) install.packages(new.packages)
 
 ### read data
-library (readr)
+time_range  <- seq(as.Date("2020-02-27"), as.Date(Sys.time()),"days")
+time_range <- as.data.frame(time_range)
+rownames(time_range) <-time_range[,1]
+colnames <- c("Date","AG","AI","AR","BE","BL","BS","FR","GE","GL","GR","JU","LU","NE","NW","OW","SG","SH","SO","SZ","TG","TI","UR","VD","VS","ZG","ZH", "CH")
+
+
+#read availuabe data sources and map to same nrow()
+
+# offical data
+urlfile <- "https://raw.githubusercontent.com/openZH/covid_19/master/COVID19_Cases_Cantons_CH_total.csv"
+offical<- read.csv(url(urlfile))
+offical <- offical[,c("date","canton","tested_pos")]
+colnames(offical)<-c("Date","canton","tested_pos")
+offical <- na.omit(offical)
+library(reshape)
+offical <- cast(offical, Date ~ canton)
+rownames(offical) <- offical[,1]
+offical <- merge(time_range, offical,by="row.names",all.x=TRUE)
+offical <- offical[-(2:3)]
+colnames(offical)[1] <- "Date"
+offical <- offical[,colnames]
+
+
+# data scraped from twitter by daenuprobst  
 urlfile <- "https://raw.githubusercontent.com/daenuprobst/covid19-cases-switzerland/master/covid19_cases_switzerland.csv"
-covid19_cases_switzerland <- read.csv(url(urlfile))
-urlfile <- "https://raw.githubusercontent.com/daenuprobst/covid19-cases-switzerland/master/predicted.csv"
-covid19_cases_switzerland_predicted <- read.csv(url(urlfile))
+scraped <- read.csv(url(urlfile))
+scraped <- scraped[,colnames]
+rownames(scraped) <- scraped[,1]
+scraped <- merge(time_range, scraped,by="row.names",all.x=TRUE)
+scraped <- scraped[,-(2:3)]
+colnames(scraped)[1] <- "Date"
+scraped <- scraped[,colnames]
 
-#clean data
-covid19_cases_switzerland[,1] <- as.Date(covid19_cases_switzerland[,1])
-covid19_cases_switzerland_predicted[,1] <- as.Date(covid19_cases_switzerland_predicted[,1])
-# repalce missings with data predicted by daenuprobst
+#create an empty data frame
+empty <- data.frame(matrix(ncol=length(colnames), nrow=nrow(time_range)))
+colnames(empty) <- colnames
+empty[,"Date"] <-time_range
+empty[1,2:ncol(empty)]<-0
 
-length(covid19_cases_switzerland) = length(covid19_cases_switzerland_predicted)
-col_sort <- colnames(covid19_cases_switzerland)
-temp<- merge(covid19_cases_switzerland_predicted,covid19_cases_switzerland, by='Date',all = TRUE)
-covid19_cases_switzerland <- temp[,1:ncol(covid19_cases_switzerland)]
- colnames(covid19_cases_switzerland) <- col_sort
+#fill empty of today with: A) offical data or B) scraped data or c) yesterdays prediction
+for(k in 2 : ncol(empty) ) {
+  empty[is.na(empty[,k]),k] <- offical[is.na(empty[,k]),k]
+  empty[is.na(empty[,k]),k] <- scraped[is.na(empty[,k]),k]
+}
 
-covid19_cases_switzerland[is.na(covid19_cases_switzerland)] <- covid19_cases_switzerland_predicted[is.na(covid19_cases_switzerland)]
+#fill empty with offical, scraped, predicted data, impute missing using na.approx()
+full <- empty
+for(k in 1 : ncol(empty) ) {
+  full[,k] <- round(na.approx(empty[,k]))
+}
 
 library(pracma)
 library(Metrics)
 library(readr)
 library(tibble)
 
-
+covid19_cases_switzerland <- full
 #all<-all[1:nrow(all)-1,]
 for(i in 1:3) {
   all <- covid19_cases_switzerland
   colnames(all)[1] <- paste("date")
   all <- as_tibble(all)
-  all$X1<-NULL
+  #all$X1<-NULL
   date<-all[,1]
   date[nrow(date) + 1,1] <-all[nrow(all),1]+1
   pred_all<-NULL
@@ -99,8 +131,11 @@ for(i in 1:3) {
   library(reshape)
   covid19_cases_switzerland_forecast <- cast(covid19_cases_switzerland_forecast, date ~ region)
   colnames(covid19_cases_switzerland_forecast)[1] <- paste("Date")
-  covid19_cases_switzerland_forecast <- covid19_cases_switzerland_forecast[,col_sort]
+  covid19_cases_switzerland_forecast <- covid19_cases_switzerland_forecast[,colnames]
   covid19_cases_switzerland <- rbind(covid19_cases_switzerland,covid19_cases_switzerland_forecast[nrow(covid19_cases_switzerland_forecast),])
 }
-write.csv(covid19_cases_switzerland, "covid19_cases_switzerland_forecast.csv")
+covid19_cases_switzerland <- covid19_cases_switzerland[,colnames]
+covid19_cases_switzerland[,1] <- as.Date(covid19_cases_switzerland[,1])
+write.csv(covid19_cases_switzerland_forecast, "covid19_cases_switzerland_forecast.csv")
 # now upload to git by hand
+View(covid19_cases_switzerland)
