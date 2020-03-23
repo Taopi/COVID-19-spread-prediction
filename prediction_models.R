@@ -1,5 +1,5 @@
 ## packages
-list.of.packages <- c("readr", "forecast", "pracma","Metrics","readr","dplyr","tibble","reshape","zoo")
+list.of.packages <- c("readr", "forecast", "pracma","Metrics","readr","dplyr","tibble","reshape","zoo","googledrive")
 new.packages <- list.of.packages[!(list.of.packages %in% installed.packages()[,"Package"])]
 if(length(new.packages)) install.packages(new.packages)
 
@@ -14,8 +14,15 @@ covid19_cases_switzerland_predicted <- read.csv(url(urlfile))
 covid19_cases_switzerland[,1] <- as.Date(covid19_cases_switzerland[,1])
 covid19_cases_switzerland_predicted[,1] <- as.Date(covid19_cases_switzerland_predicted[,1])
 # repalce missings with data predicted by daenuprobst
-covid19_cases_switzerland[is.na(covid19_cases_switzerland)] <- covid19_cases_switzerland_predicted[is.na(covid19_cases_switzerland)]
+
+length(covid19_cases_switzerland) = length(covid19_cases_switzerland_predicted)
 col_sort <- colnames(covid19_cases_switzerland)
+temp<- merge(covid19_cases_switzerland_predicted,covid19_cases_switzerland, by='Date',all = TRUE)
+covid19_cases_switzerland <- temp[,1:ncol(covid19_cases_switzerland)]
+ colnames(covid19_cases_switzerland) <- col_sort
+
+covid19_cases_switzerland[is.na(covid19_cases_switzerland)] <- covid19_cases_switzerland_predicted[is.na(covid19_cases_switzerland)]
+
 library(pracma)
 library(Metrics)
 library(readr)
@@ -96,3 +103,4 @@ for(i in 1:3) {
   covid19_cases_switzerland <- rbind(covid19_cases_switzerland,covid19_cases_switzerland_forecast[nrow(covid19_cases_switzerland_forecast),])
 }
 write.csv(covid19_cases_switzerland, "covid19_cases_switzerland_forecast.csv")
+# now upload to git by hand
