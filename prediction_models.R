@@ -36,7 +36,7 @@ scraped <- merge(time_range, scraped,by="row.names",all.x=TRUE)
 scraped <- scraped[,-(2:3)]
 colnames(scraped)[1] <- "Date"
 scraped <- scraped[,colnames]
-scraped <- scraped[-nrow(scraped),] #test
+#scraped <- scraped[-nrow(scraped),] #test
 
 # data predicted yesterday until today
 urlfile <- "https://raw.githubusercontent.com/Taopi/COVID-19-spread-prediction/master/covid19_cases_switzerland_forecast.csv"
