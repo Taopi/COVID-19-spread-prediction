@@ -59,6 +59,7 @@ for(k in 2 : ncol(empty) ) {
 }
 
 #fill empty with offical, scraped, predicted data, impute missing using na.approx()
+library(zoo)
 full <- empty
 for(k in 1 : ncol(empty) ) {
   full[,k] <- round(na.approx(empty[,k]))
@@ -148,3 +149,4 @@ covid19_cases_switzerland[,1] <- as.Date(covid19_cases_switzerland[,1])
 write.csv(covid19_cases_switzerland, "covid19_cases_switzerland_forecast.csv")
 
 # now upload to git by hand
+View(covid19_cases_switzerland)
