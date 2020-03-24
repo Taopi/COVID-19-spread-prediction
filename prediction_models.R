@@ -55,7 +55,7 @@ empty[1,2:ncol(empty)]<-0
 for(k in 2 : ncol(empty) ) {
   empty[is.na(empty[,k]),k] <- offical[is.na(empty[,k]),k]
   empty[is.na(empty[,k]),k] <- scraped[is.na(empty[,k]),k]
-  empty[nrow(time_range),k] <- yesterdays_prediction[nrow(time_range),k]
+  empty[nrow(time_range),k] <- yesterdays_prediction[nrow(time_range),k]#to do add only for empty
 }
 
 #fill empty with offical, scraped, predicted data, impute missing using na.approx()
@@ -149,4 +149,7 @@ covid19_cases_switzerland[,1] <- as.Date(covid19_cases_switzerland[,1])
 write.csv(covid19_cases_switzerland, "covid19_cases_switzerland_forecast.csv")
 
 # now upload to git by hand
+<<<<<<< HEAD
 View(covid19_cases_switzerland)
+=======
+>>>>>>> 3da5866ee24dea83322f1d4cd332201cbfa3e2be
