@@ -4,7 +4,7 @@ new.packages <- list.of.packages[!(list.of.packages %in% installed.packages()[,"
 if(length(new.packages)) install.packages(new.packages)
 
 ### read data
-time_range  <- seq(as.Date("2020-02-27"), as.Date(Sys.time()),"days")
+time_range  <- seq(as.Date("2020-02-27"), as.Date(Sys.time())-2,"days")
 time_range <- as.data.frame(time_range)
 rownames(time_range) <-time_range[,1]
 colnames <- c("Date","AG","AI","AR","BE","BL","BS","FR","GE","GL","GR","JU","LU","NE","NW","OW","SG","SH","SO","SZ","TG","TI","UR","VD","VS","ZG","ZH", "CH")
@@ -27,8 +27,8 @@ colnames(offical)[1] <- "Date"
 offical <- offical[,colnames]
 
 
-# data scraped from twitter by daenuprobst  
-urlfile <- "https://raw.githubusercontent.com/daenuprobst/covid19-cases-switzerland/master/covid19_cases_switzerland.csv"
+# data scraped from twitter by daenuprobst  https://github.com/daenuprobst/covid19-cases-switzerland
+urlfile <- "https://raw.githubusercontent.com/daenuprobst/covid19-cases-switzerland/master/covid19_cases_switzerland_openzh.csv"
 scraped <- read.csv(url(urlfile))
 scraped <- scraped[,colnames]
 rownames(scraped) <- scraped[,1]
