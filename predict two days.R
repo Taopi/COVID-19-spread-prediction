@@ -1,4 +1,4 @@
-all <- covid19_cases_predicted
+all <- rbind(covid19_cases, covid19_cases_predicted[nrow(covid19_cases_predicted),])
 all <- as_tibble(all) 
 ###
 all$X1<-NULL
