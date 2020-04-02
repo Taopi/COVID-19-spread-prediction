@@ -4,7 +4,7 @@ new.packages <- list.of.packages[!(list.of.packages %in% installed.packages()[,"
 if(length(new.packages)) install.packages(new.packages)
 
 ### read data
-time_range  <- seq(as.Date("2020-02-27"), as.Date(Sys.time())-2,"days")
+time_range  <- seq(as.Date("2020-02-25"), as.Date(Sys.time()),"days")
 time_range <- as.data.frame(time_range)
 rownames(time_range) <-time_range[,1]
 colnames <- c("Date","AG","AI","AR","BE","BL","BS","FR","GE","GL","GR","JU","LU","NE","NW","OW","SG","SH","SO","SZ","TG","TI","UR","VD","VS","ZG","ZH", "CH")
@@ -13,7 +13,7 @@ colnames <- c("Date","AG","AI","AR","BE","BL","BS","FR","GE","GL","GR","JU","LU"
 #read availuabe data sources and map to same nrow()
 
 # offical data
-urlfile <- "https://raw.githubusercontent.com/openZH/covid_19/master/COVID19_Cases_Cantons_CH_total.csv"
+urlfile <- "https://raw.githubusercontent.com/daenuprobst/covid19-cases-switzerland/master/covid19_cases_switzerland_openzh.csv"
 offical<- read.csv(url(urlfile))
 offical <- offical[,c("date","canton","tested_pos")]
 colnames(offical)<-c("Date","canton","tested_pos")
@@ -33,7 +33,7 @@ scraped <- read.csv(url(urlfile))
 scraped <- scraped[,colnames]
 rownames(scraped) <- scraped[,1]
 scraped <- merge(time_range, scraped,by="row.names",all.x=TRUE)
-scraped <- scraped[,-(2:3)]
+#scraped <- scraped[,-(2:3)]
 colnames(scraped)[1] <- "Date"
 scraped <- scraped[,colnames]
 #scraped <- scraped[-nrow(scraped),] #test
@@ -41,9 +41,9 @@ scraped <- scraped[,colnames]
 # data predicted yesterday until today
 urlfile <- "https://raw.githubusercontent.com/Taopi/COVID-19-spread-prediction/master/covid19_cases_switzerland_forecast.csv"
 yesterdays_prediction <- read.csv(url(urlfile))
+yesterdays_prediction <- yesterdays_prediction[,colnames]
 yesterdays_prediction<-yesterdays_prediction[1:nrow(time_range),]
 colnames(yesterdays_prediction)[1] <- "Date"
-yesterdays_prediction <- yesterdays_prediction[,colnames]
 
 #create an empty data frame
 empty <- data.frame(matrix(ncol=length(colnames), nrow=nrow(time_range)))
@@ -149,7 +149,4 @@ covid19_cases_switzerland[,1] <- as.Date(covid19_cases_switzerland[,1])
 write.csv(covid19_cases_switzerland, "covid19_cases_switzerland_forecast.csv")
 
 # now upload to git by hand
-<<<<<<< HEAD
 View(covid19_cases_switzerland)
-=======
->>>>>>> 3da5866ee24dea83322f1d4cd332201cbfa3e2be
